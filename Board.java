@@ -24,7 +24,7 @@ public class Board extends JPanel implements Runnable, Commons {
 
 	private int alienX = 18;
 	private int alienY = 36;
-	private int direction = -1;
+	private int direction = 1;
 	private int deaths = 0;
 
 	private boolean ingame = true;
@@ -89,19 +89,36 @@ public class Board extends JPanel implements Runnable, Commons {
 			}
 		}
 
-		//mushroom correction
-//		Iterator i3 = aliens.iterator();
-//		Random generator = new Random();
-//
-//		while (i3.hasNext()) {
-//			Alien a = (Alien) i3.next();
-//			a.isVisible()
-//			if ((shot == CHANCE) && (a.isVisible()) && (b.isDestroyed())) {
-//				b.setDestroyed(false);
-//				b.setX(a.getX());
-//				b.setY(a.getY());
-//			}
-//		}
+//		TODO - mushroom correction
+		int rowIndx = 0;
+		int colIndx = 0;
+		//last row does'nt matter 13// inside col check
+		while ( rowIndx < 12){
+			while (colIndx < 18 && colIndx > -1){
+				if(rowIndx >= 12){
+					break;
+				}
+				if (((colIndx == 0 && direction == 1)  || (colIndx == 17 && direction == -1)) && aliens.get(colIndx + 18*rowIndx ).isVisible() ){
+					rowIndx++;
+				}
+				else if (aliens.get(colIndx + 18*rowIndx ).isVisible() ){
+					aliens.get((colIndx-(direction)) + 18*(rowIndx+1)).setVisible(false);
+					rowIndx++;
+				}
+				else{
+					colIndx+= direction;
+				}
+			}
+			direction *= -1;
+			if(direction==1){
+				colIndx = 0;
+			}
+			else{
+				colIndx = 17;
+			}
+			rowIndx++;
+		}
+
 
 		player = new Player();
 		shot = new Shot();
