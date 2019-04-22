@@ -31,8 +31,8 @@ public class Player extends Sprite implements Commons {
 		if (mY >= 315) {
 			mY = 315;
 		}
-		if (mY <= 245) {
-			mY = 245;
+		if (mY <= 255) {
+			mY = 255;
 		}
 	}
 

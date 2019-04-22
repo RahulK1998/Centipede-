@@ -22,8 +22,8 @@ public class Board extends JPanel implements Runnable, Commons {
 	private Player player;
 	private Shot shot;
 
-	private int alienX = 150;
-	private int alienY = 5;
+	private int alienX = 18;
+	private int alienY = 36;
 	private int direction = -1;
 	private int deaths = 0;
 
@@ -55,13 +55,49 @@ public class Board extends JPanel implements Runnable, Commons {
 		aliens = new ArrayList<Alien>();
 		ImageIcon ii = new ImageIcon(alienImg);
 
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 6; j++) {
+		for (int i = 0; i < 13; i++) {
+			for (int j = 0; j < 18; j++) {
 				Alien alien = new Alien(alienX + 18*j, alienY + 18*i);
 				alien.setImage(ii.getImage());
 				aliens.add(alien);
 			}
 		}
+
+		//mushroom selection code
+
+		Random generator = new Random();
+		int removeCount = 0;
+		int indx = 0;
+		ArrayList<Integer> list;
+
+		for (int i = 0; i < 13; i++) {
+			list = new ArrayList<Integer>();
+			removeCount = generator.nextInt(10) + 8; //min value for random
+
+			for (int j = 0; j < removeCount; j++){
+				indx = generator.nextInt(18);
+				while(list.contains(indx)){
+					indx = generator.nextInt(18);
+				}
+				list.add(indx);
+				Alien a = (Alien) aliens.get(indx+i*18);
+				a.die();
+			}
+		}
+
+		//mushroom correction
+//		Iterator i3 = aliens.iterator();
+//		Random generator = new Random();
+//
+//		while (i3.hasNext()) {
+//			Alien a = (Alien) i3.next();
+//			a.isVisible()
+//			if ((shot == CHANCE) && (a.isVisible()) && (b.isDestroyed())) {
+//				b.setDestroyed(false);
+//				b.setX(a.getX());
+//				b.setY(a.getY());
+//			}
+//		}
 
 		player = new Player();
 		shot = new Shot();
@@ -102,16 +138,16 @@ public class Board extends JPanel implements Runnable, Commons {
 		}
 	}
 
-	public void drawBombing(Graphics g) {
-		Iterator i3 = aliens.iterator();
-		while (i3.hasNext()) {
-			Alien a = (Alien)i3.next();
-			Alien.Bomb b = a.getBomb();
-			if (!b.isDestroyed()) {
-				g.drawImage(b.getImage(), b.getX(), b.getY(), this);
-			}
-		}
-	}
+//	public void drawBombing(Graphics g) {
+//		Iterator i3 = aliens.iterator();
+//		while (i3.hasNext()) {
+//			Alien a = (Alien)i3.next();
+//			Alien.Bomb b = a.getBomb();
+//			if (!b.isDestroyed()) {
+//				g.drawImage(b.getImage(), b.getX(), b.getY(), this);
+//			}
+//		}
+//	}
 
 	public void paint(Graphics g) {
 		super.paint(g);
@@ -124,7 +160,7 @@ public class Board extends JPanel implements Runnable, Commons {
 			drawAliens(g);
 			drawPlayer(g);
 			drawShot(g);
-			drawBombing(g);
+//			drawBombing(g);
 		}
 
 		Toolkit.getDefaultToolkit().sync();
@@ -185,76 +221,75 @@ public class Board extends JPanel implements Runnable, Commons {
 			}
 		}
 
-		Iterator itl = aliens.iterator();
-		while (itl.hasNext()) {
-			Alien al = (Alien)itl.next();
-			int x = al.getX();
-			if ((x >= BOARD_WIDTH - BORDER_RIGHT) && (direction != -1)) {
-				direction = -1;
-				Iterator il = aliens.iterator();
-				while (il.hasNext()) {
-					Alien a3 = (Alien)il.next();
-					a3.setY(a3.getY() + GO_DOWN);
-				}
-			}
+//		Iterator itl = aliens.iterator();
+//		while (itl.hasNext()) {
+//			Alien al = (Alien)itl.next();
+//			int x = al.getX();
+//			if ((x >= BOARD_WIDTH - BORDER_RIGHT) && (direction != -1)) {
+//				direction = -1;
+//				Iterator il = aliens.iterator();
+//				while (il.hasNext()) {
+//					Alien a3 = (Alien)il.next();
+//					a3.setY(a3.getY() + GO_DOWN);
+//				}
+//			}
+//
+//			if ((x <= BORDER_LEFT) && (direction != 1)) {
+//				direction = 1;
+//				Iterator i2 = aliens.iterator();
+//				while (i2.hasNext()) {
+//					Alien a = (Alien)i2.next();
+//					a.setY(a.getY() + GO_DOWN);
+//				}
+//			}
+//		}
 
-			if ((x <= BORDER_LEFT) && (direction != 1)) {
-				direction = 1;
-				Iterator i2 = aliens.iterator();
-				while (i2.hasNext()) {
-					Alien a = (Alien)i2.next();
-					a.setY(a.getY() + GO_DOWN);
-				}
-			}
-		}
+//		Iterator it = aliens.iterator();
+//		while (it.hasNext()) {
+//			Alien alien = (Alien)it.next();
+//			if (alien.isVisible()) {
+//				int y = alien.getY();
+//				if (y > GROUND - ALIEN_HEIGHT) {
+//					ingame = false;
+//					message = "Invasion!";
+//				}
+//			}
+//		}
 
-		Iterator it = aliens.iterator();
-		while (it.hasNext()) {
-			Alien alien = (Alien)it.next();
-			if (alien.isVisible()) {
-				int y = alien.getY();
-				if (y > GROUND - ALIEN_HEIGHT) {
-					ingame = false;
-					message = "Invasion!";
-				}
-				alien.act(direction);
-			}
-		}
+//		Iterator i3 = aliens.iterator();
+//		Random generator = new Random();
 
-		Iterator i3 = aliens.iterator();
-		Random generator = new Random();
-
-		while (i3.hasNext()) {
-			int shot = generator.nextInt(25);
-			Alien a = (Alien)i3.next();
-			Alien.Bomb b = a.getBomb();
-			if ((shot == CHANCE) && (a.isVisible()) && (b.isDestroyed())) {
-				b.setDestroyed(false);
-				b.setX(a.getX());
-				b.setY(a.getY());
-			}
-
-			int bombX = b.getX();
-			int bombY = b.getY();
-			int playerX = player.getX();
-			int playerY = player.getY();
-
-			if ((player.isVisible()) && (!b.isDestroyed())) {
-				if ((bombX >= playerX) && (bombX <= playerX+PLAYER_WIDTH) && (bombY >= playerY) && (bombY <= playerY+PLAYER_HEIGHT)) {
-					ImageIcon ii = new ImageIcon(explImg);
-					player.setImage(ii.getImage());
-					player.setDying(true);
-					b.setDestroyed(true);
-				}
-			}
-
-			if (!b.isDestroyed()) {
-				b.setY(b.getY() + 1);
-				if (b.getY() >= 325 - BOMB_HEIGHT) {
-					b.setDestroyed(true);
-				}
-			}
-		}
+//		while (i3.hasNext()) {
+//			int shot = generator.nextInt(25);
+//			Alien a = (Alien)i3.next();
+//			Alien.Bomb b = a.getBomb();
+//			if ((shot == CHANCE) && (a.isVisible()) && (b.isDestroyed())) {
+//				b.setDestroyed(false);
+//				b.setX(a.getX());
+//				b.setY(a.getY());
+//			}
+//
+//			int bombX = b.getX();
+//			int bombY = b.getY();
+//			int playerX = player.getX();
+//			int playerY = player.getY();
+//
+//			if ((player.isVisible()) && (!b.isDestroyed())) {
+//				if ((bombX >= playerX) && (bombX <= playerX+PLAYER_WIDTH) && (bombY >= playerY) && (bombY <= playerY+PLAYER_HEIGHT)) {
+//					ImageIcon ii = new ImageIcon(explImg);
+//					player.setImage(ii.getImage());
+//					player.setDying(true);
+//					b.setDestroyed(true);
+//				}
+//			}
+//
+//			if (!b.isDestroyed()) {
+//				b.setY(b.getY() + 1);
+//				if (b.getY() >= 325 - BOMB_HEIGHT) {
+//					b.setDestroyed(true);
+//				}
+//			}
+//		}
 	}
 
 	public void run() {
