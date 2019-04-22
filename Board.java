@@ -29,7 +29,11 @@ public class Board extends JPanel implements Runnable, Commons {
 
 	private boolean ingame = true;
 	private final String explImg = "./img/explosion.png";
-	private final String alienImg = "./img/alien.png";
+	private final String alienImg = "./img/mushroom1.png";
+	private final String m3 = "./img/mushroom2.png";
+	private final String m2 = "./img/mushroom3.png";
+	private final String m1 = "./img/mushroom4.png";
+
 	private String message = "Game Over";
 
 	private Thread animator;
@@ -200,14 +204,33 @@ public class Board extends JPanel implements Runnable, Commons {
 				Alien alien = (Alien)it.next();
 				int alienX = alien.getX();
 				int alienY = alien.getY();
-
+				ImageIcon ii;
 				if (alien.isVisible() && (shot.isVisible())) {
 					if ((shotX >= alienX) && (shotX <= alienX + ALIEN_WIDTH) && (shotY >= alienY) && (shotY <= alienY+ALIEN_HEIGHT)) {
-						ImageIcon ii = new ImageIcon(explImg);
-						alien.setImage(ii.getImage());
-						alien.setDying(true);
-						deaths++;
-						shot.die();
+						switch(alien.getLives()){
+							case 4: alien.setLives(3);
+									ii = new ImageIcon(m3);
+									alien.setImage(ii.getImage());
+									shot.die();
+									break;
+							case 3: alien.setLives(2);
+									ii = new ImageIcon(m2);
+									alien.setImage(ii.getImage());
+									shot.die();
+									break;
+							case 2: alien.setLives(1);
+									ii = new ImageIcon(m1);
+									alien.setImage(ii.getImage());
+									shot.die();
+									break;
+							case 1: alien.setLives(0);
+									ii = new ImageIcon(explImg);
+									alien.setImage(ii.getImage());
+									alien.setDying(true);
+									deaths++;
+									shot.die();
+									break;
+						}
 					}
 				}
 			}
