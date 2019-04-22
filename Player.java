@@ -1,4 +1,7 @@
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import javax.swing.ImageIcon;
 
 public class Player extends Sprite implements Commons {
@@ -36,30 +39,36 @@ public class Player extends Sprite implements Commons {
 		}
 	}
 
-	public void keyPressed(KeyEvent e) {
-		int key = e.getKeyCode();
-		if (key == KeyEvent.VK_LEFT) {
-			mDx = -2;
-		}
-		else if (key == KeyEvent.VK_RIGHT) {
-			mDx = 2;
-		}
-		else if (key == KeyEvent.VK_UP) {
-			mDy = -2;
-		}
-		else if (key == KeyEvent.VK_DOWN) {
-			mDy = 2;
-		}
-
+	public void mouseMove(int dx,int dy){
+		mDx = dx;
+		mDy = dy;
 	}
 
-	public void keyReleased(KeyEvent e) {
-		int key = e.getKeyCode();
-		if ((key == KeyEvent.VK_LEFT) || (key == KeyEvent.VK_RIGHT)) {
-			mDx = 0;
-		}
-		else if ((key == KeyEvent.VK_UP) || (key == KeyEvent.VK_DOWN)) {
-			mDy = 0;
-		}
-	}
+	
+//	public void keyPressed(KeyEvent e) {
+//		int key = e.getKeyCode();
+//		if (key == KeyEvent.VK_LEFT) {
+//			mDx = -2;
+//		}
+//		else if (key == KeyEvent.VK_RIGHT) {
+//			mDx = 2;
+//		}
+//		else if (key == KeyEvent.VK_UP) {
+//			mDy = -2;
+//		}
+//		else if (key == KeyEvent.VK_DOWN) {
+//			mDy = 2;
+//		}
+//
+//	}
+//
+//	public void keyReleased(KeyEvent e) {
+//		int key = e.getKeyCode();
+//		if ((key == KeyEvent.VK_LEFT) || (key == KeyEvent.VK_RIGHT)) {
+//			mDx = 0;
+//		}
+//		else if ((key == KeyEvent.VK_UP) || (key == KeyEvent.VK_DOWN)) {
+//			mDy = 0;
+//		}
+//	}
 }

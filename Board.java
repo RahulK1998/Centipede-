@@ -8,13 +8,22 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.Point;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 public class Board extends JPanel implements Runnable, Commons {
 	private Dimension d;
@@ -32,11 +41,25 @@ public class Board extends JPanel implements Runnable, Commons {
 	private final String alienImg = "./img/alien.png";
 	private String message = "Game Over";
 
+	//Mouse location stuff
+	private Point mouseLocation;
+	private Point centerLocation;
+//	private Component comp;
+	private Robot robot;
+	private boolean isRecentering;
+
+
 	private Thread animator;
 
 	public Board() {
-		addKeyListener(new TAdapter());
-		addMouseListener(new MAdapter());
+		mouseLocation = new Point();
+		centerLocation = new Point();
+
+//
+//		addKeyListener(new TAdapter());
+		MouseListeners listeners = new MouseListeners();
+		addMouseListener(listeners);
+		addMouseMotionListener(listeners);
 
 		setFocusable(true);
 		d = new Dimension(BOARD_WIDTH, BOARD_HEIGHT);
@@ -280,27 +303,70 @@ public class Board extends JPanel implements Runnable, Commons {
 		gameOver();
 	}
 
-	private class TAdapter extends KeyAdapter {
-		public void keyReleased(KeyEvent e) {
-			player.keyReleased(e);
+
+	public void setRelativeMouseMode(boolean mode) {
+		if (mode == isRelativeMouseMode()) {
+			return;
 		}
 
-		public void keyPressed(KeyEvent e) {
-			player.keyPressed(e);
-			int x = player.getX();
-			int y = player.getY();
-//			if (ingame) {
-//				if (e.isAltDown()) {
-//					if (!shot.isVisible()) {
-//						shot = new Shot(x,y);
-//					}
-//				}
-//			}
+		if (mode) {
+			try {
+				robot = new Robot();
+				recenterMouse();
+			}
+			catch (AWTException ex) {
+				// couldn't create robot!
+				robot = null;
+			}
+		}
+		else {
+			robot = null;
 		}
 	}
 
 
-	private class MAdapter extends MouseAdapter{
+	/**
+	 Returns whether or not relative mouse mode is on.
+	 */
+	public boolean isRelativeMouseMode() {
+		return (robot != null);
+	}
+
+
+	private synchronized void recenterMouse() {
+		//Window window = screen.getFullScreenWindow();
+		if (robot != null && this.isShowing()) {
+			centerLocation.x = BOARD_WIDTH / 2;
+			centerLocation.y = BOARD_HEIGHT / 2;
+			SwingUtilities.convertPointToScreen(centerLocation,
+					this);
+			isRecentering = true;
+			robot.mouseMove(centerLocation.x, centerLocation.y);
+		}
+	}
+
+//	private class TAdapter extends KeyAdapter {
+//		public void keyReleased(KeyEvent e) {
+//			player.keyReleased(e);
+//		}
+//
+//		public void keyPressed(KeyEvent e) {
+////			player.keyPressed(e);
+////			int x = player.getX();
+////			int y = player.getY();
+////			if (ingame) {
+////				if (e.isAltDown()) {
+////					if (!shot.isVisible()) {
+////						shot = new Shot(x,y);
+////					}
+////				}
+////			}
+//		}
+//	}
+
+
+	private class MouseListeners extends MouseAdapter{
+		@Override
 		public void mouseClicked(MouseEvent m){
 			int x = player.getX();
 			int y = player.getY();
@@ -312,5 +378,29 @@ public class Board extends JPanel implements Runnable, Commons {
 				}
 			}
 		}
+
+		@Override
+		public synchronized void mouseMoved(MouseEvent m) {
+			if (isRecentering &&
+					centerLocation.x == m.getX() &&
+					centerLocation.y == m.getY())
+			{
+				isRecentering = false;
+			}
+			else {
+				int dx = m.getX() - mouseLocation.x;
+				int dy = m.getY() - mouseLocation.y;
+				Player.mouseMove(dx,dy);
+				if (isRelativeMouseMode()) {
+					recenterMouse();
+				}
+
+			}
+			mouseLocation.x = m.getX();
+			mouseLocation.y = m.getY();
+		}
+
 	}
+
+
 }
