@@ -65,8 +65,7 @@ public class Board extends JPanel implements Runnable, Commons {
 
 		segments = new ArrayList<Centipede>();
 		ImageIcon ii = new ImageIcon(centImg);
-
-			for (int j = 0; j < 10; j++) {
+			for (int j = 0; j < 7; j++) {
 				Centipede centipede = new Centipede(centiX - SPRITE_WIDTH*j, centiY );
 				centipede.setImage(ii.getImage());
 				segments.add(centipede);
@@ -76,7 +75,6 @@ public class Board extends JPanel implements Runnable, Commons {
 
 		aliens = new ArrayList<Alien>();
 		ImageIcon iii = new ImageIcon(alienImg);
-
 		for (int i = 0; i < 14; i++) {
 			for (int j = 0; j < 18; j++) {
 				Alien alien = new Alien(alienX + 18*j, alienY + 18*i);
@@ -112,6 +110,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		int rowIndx = 0;
 		int colIndx = 0;
 		//last row does'nt matter 14// inside col check
+		//TODO - some improvements in mushroom placement 
 		while ( rowIndx < 13){
 			while (colIndx < 18 && colIndx > -1){
 				if(rowIndx >= 13){
@@ -303,6 +302,7 @@ public class Board extends JPanel implements Runnable, Commons {
 						}
 					}
 				}
+
 			}
 
 			int y = shot.getY();
@@ -321,9 +321,30 @@ public class Board extends JPanel implements Runnable, Commons {
 
 
 		//Combine iterators
-		Iterator itl = segments.iterator();
-		Iterator itm = aliens.iterator();
 
+
+
+//		while(itm.hasNext()){
+//
+//			Alien shroom = (Alien) itm.next();
+//			//get rid of unnecessay ct
+//			if(!ct.isVisible()){
+//				break;
+//			}
+//			if(shroom.isVisible()){
+//				System.out.println("I'm in 1"+ (shroom.isVisible()));
+//				if((x  <= shroom.getX()+ ALIEN_WIDTH) && (x + ALIEN_WIDTH >= shroom.getX()) ){
+//					if((y + ALIEN_HEIGHT >= shroom.getY()) && (y <= shroom.getY()+ALIEN_HEIGHT)){
+//						System.out.println("I'm in 2");
+//						ct.setY(ct.getY() + GO_DOWN);
+//						//System.out.println("x -> "+x +" x + Alien ->" +(x+ ALIEN_WIDTH )+ " shroom->" + shroom.getX() );
+//						break;
+//					}
+//				}
+//			}
+//		}
+
+		Iterator itl = segments.iterator();
 		while (itl.hasNext()) {
 			Centipede ct = (Centipede) itl.next();
 			int x = ct.getX();
@@ -337,21 +358,6 @@ public class Board extends JPanel implements Runnable, Commons {
 				ct.setY(ct.getY() + GO_DOWN);
 			}
 
-//			while(itm.hasNext()){
-//				Alien shroom = (Alien) itm.next();
-//				//get rid of unnecessay ct
-//				if(!ct.isVisible()){
-//					break;
-//				}
-//				if(shroom.isVisible()){
-//					if((x + ALIEN_WIDTH >= shroom.getX()) && (x + ALIEN_WIDTH <= shroom.getX() + ALIEN_WIDTH) && (y + ALIEN_HEIGHT >= shroom.getY()) && (y <= shroom.getY()+ALIEN_HEIGHT)  ){
-//						ct.setY(ct.getY() + GO_DOWN);
-//						break;
-//					}
-//				}
-//			}
-
-
 			if (ct.isVisible()) {
 				if (y > BOARD_HEIGHT - ALIEN_HEIGHT) {
 					ingame = false;
@@ -359,10 +365,32 @@ public class Board extends JPanel implements Runnable, Commons {
 				}
 
 				ct.act();
-				//collision detection
 			}
 		}
 
+
+
+		Iterator segit = segments.iterator();
+		while(segit.hasNext()) {
+			Centipede segOne = (Centipede) segit.next();
+			if(segOne.isVisible()) {
+				Iterator alit = aliens.iterator();
+				while (alit.hasNext()){
+					Alien shroom = (Alien) alit.next();
+					if (shroom.isVisible()) {
+						//System.out.println("I'm in 1" + (shroom.isVisible()));
+						if ((segOne.getX() <= shroom.getX() + ALIEN_WIDTH) && (segOne.getX() + ALIEN_WIDTH >= shroom.getX())) {
+							if ((segOne.getY() + ALIEN_HEIGHT >= shroom.getY()) && (segOne.getY() <= shroom.getY() + ALIEN_HEIGHT)) {
+								//System.out.println("I'm in 2");
+								segOne.setY(segOne.getY() + GO_DOWN);
+								//System.out.println("x -> "+x +" x + Alien ->" +(x+ ALIEN_WIDTH )+ " shroom->" + shroom.getX() );
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
 
 //		Iterator i3 = aliens.iterator();
 //		Random generator = new Random();
