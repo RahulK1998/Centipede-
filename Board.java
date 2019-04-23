@@ -393,6 +393,26 @@ public class Board extends JPanel implements Runnable, Commons {
 			}
 		}
 
+		Iterator segit2 = segments.iterator();
+		while(segit2.hasNext()){
+			Centipede segTwo = (Centipede) segit2.next();
+			if(segTwo.isVisible()) {
+				if(segTwo.getY() + SPRITE_HEIGHT >=275){
+					if(segTwo.getX() <= (player.getX()+PLAYER_WIDTH)
+							&& segTwo.getX()+ALIEN_WIDTH >= (player.getX())
+							&& segTwo.getY() + ALIEN_HEIGHT >= (player.getY())
+							&& segTwo.getY() <= (player.getY() + PLAYER_HEIGHT)){
+						ImageIcon iv = new ImageIcon(explImg);
+						player.setImage(iv.getImage());
+						player.setDying(true);
+						break;
+					}
+				}
+			}
+		}
+
+
+
 //		Iterator i3 = aliens.iterator();
 //		Random generator = new Random();
 

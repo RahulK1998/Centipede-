@@ -5,7 +5,7 @@ public class Player extends Sprite implements Commons {
 	private final int START_X = 270;//270
 	private final int START_Y = 315;//280
 
-	private final String path = "./img/player.png";
+	private final String path = "./img/ship.png";
 	private int mWidth;
 	private int mHeight;
 
