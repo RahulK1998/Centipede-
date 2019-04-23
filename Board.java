@@ -75,7 +75,7 @@ public class Board extends JPanel implements Runnable, Commons {
 
 		aliens = new ArrayList<Alien>();
 		ImageIcon iii = new ImageIcon(alienImg);
-		for (int i = 0; i < 14; i++) {
+		for (int i = 0; i < 15; i++) {
 			for (int j = 0; j < 18; j++) {
 				Alien alien = new Alien(alienX + 18*j, alienY + 18*i);
 				alien.setImage(iii.getImage());
@@ -91,7 +91,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		int indx = 0;
 		ArrayList<Integer> list;
 
-		for (int i = 0; i < 14; i++) {
+		for (int i = 0; i < 15; i++) {
 			list = new ArrayList<Integer>();
 			removeCount = generator.nextInt(9); //min value for random
 
@@ -110,10 +110,10 @@ public class Board extends JPanel implements Runnable, Commons {
 		int rowIndx = 0;
 		int colIndx = 0;
 		//last row does'nt matter 14// inside col check
-		//TODO - some improvements in mushroom placement 
-		while ( rowIndx < 13){
+		//TODO - some improvements in mushroom placement
+		while ( rowIndx < 14){
 			while (colIndx < 18 && colIndx > -1){
-				if(rowIndx >= 13){
+				if(rowIndx >= 14){
 					break;
 				}
 				if (((colIndx == 0 && direction == 1)  || (colIndx == 17 && direction == -1)) && aliens.get(colIndx + 18*rowIndx ).isVisible() ){
@@ -359,7 +359,8 @@ public class Board extends JPanel implements Runnable, Commons {
 			}
 
 			if (ct.isVisible()) {
-				if (y > BOARD_HEIGHT - ALIEN_HEIGHT) {
+				//not dropping beyond the top most line
+				if (y > BOARD_HEIGHT - BORDER_RIGHT - (3* SPRITE_HEIGHT)) {
 					ingame = false;
 					message = "Invasion!";
 				}
@@ -432,8 +433,15 @@ public class Board extends JPanel implements Runnable, Commons {
 		long beforeTime, timeDiff, sleep;
 		beforeTime = System.currentTimeMillis();
 		while (ingame) {
-			repaint();
-			animationCycle();
+			//catching concurrent modification and other thread errors
+			try {
+				repaint();
+				animationCycle();
+			}
+			catch(Exception e){
+				System.out.println("Error was caught "+ e);
+				continue;
+			}
 
 			timeDiff = System.currentTimeMillis() - beforeTime;
 			sleep = DELAY - timeDiff;
