@@ -8,9 +8,13 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
 import javax.sound.sampled.*;
 import java.io.File;
 import java.io.IOException;
+import java.awt.image.BufferedImage;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -42,6 +46,12 @@ public class Board extends JPanel implements Runnable, Commons {
 	private int score = 0;
 	private int noAliens = 0;
 
+	private Point mouseLocation;
+	private Point centerLocation;
+	//	private Component comp;
+	private Robot robot;
+	private boolean isRecentering;
+
 	private boolean ingame = true;
 	private final String explImg = "./img/explosion.png";
 	private final String alienImg = "./img/mushroom1.png";
@@ -57,8 +67,33 @@ public class Board extends JPanel implements Runnable, Commons {
 	private Thread animator;
 
 	public Board() {
+
+		//invisible cursor
+		// Transparent 16 x 16 pixel cursor image.
+		BufferedImage cursorImg = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+
+		// Create a new blank cursor.
+		Cursor blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(
+				cursorImg, new Point(0, 0), "blank cursor");
+
+		// Set the blank cursor to the JFrame.
+		this.setCursor(blankCursor);
+
+
+		mouseLocation = new Point();
+		centerLocation = new Point();
+
 		addKeyListener(new TAdapter());
-		addMouseListener(new MAdapter());
+		MouseListeners listeners = new MouseListeners();
+		addMouseListener(listeners);
+		addMouseMotionListener(listeners);
+
+//		final Robot r = new Robot();
+//		MAdapter ma = new MAdapter();
+//		this.addKeyListener(new TAdapter());
+//		this.addMouseListener(ma);
+//		this.addMouseMoionListener(ma);
+
 
 		setFocusable(true);
 		d = new Dimension(BOARD_WIDTH, BOARD_HEIGHT);
@@ -67,6 +102,8 @@ public class Board extends JPanel implements Runnable, Commons {
 		gameInit();
 		setDoubleBuffered(true);
 	}
+
+
 
 	//don't know if this is needed ??
 	public void addNotify() {
@@ -397,7 +434,7 @@ public class Board extends JPanel implements Runnable, Commons {
 			}
 		}
 
-		player.act();
+		//player.act();
 
 		//create an iterator
 		Iterator itShots = shots.iterator();
@@ -674,7 +711,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		}
 
 		public void keyPressed(KeyEvent e) {
-			player.keyPressed(e);
+//			player.keyPressed(e);
 //			int x = player.getX();
 //			int y = player.getY();
 			int key = e.getKeyCode();
@@ -692,21 +729,58 @@ public class Board extends JPanel implements Runnable, Commons {
 					ingame = true;
 				}
 			}
-
-
-
-//			if (ingame) {
-//				if (e.isAltDown()) {
-//					if (!shot.isVisible()) {
-//						shot = new Shot(x,y);
-//					}
-//				}
-//			}
 		}
 	}
 
 
-	private class MAdapter extends MouseAdapter{
+
+	public void setRelativeMouseMode(boolean mode) {
+		if (mode == isRelativeMouseMode()) {
+			return;
+		}
+
+		if (mode) {
+//			robot = null;
+			try {
+				robot = new Robot();
+
+				recenterMouse();
+			}
+			catch (AWTException ex) {
+				// couldn't create robot!
+				robot = null;
+			}
+		}
+		else {
+			robot = null;
+		}
+	}
+
+
+	/**
+	 Returns whether or not relative mouse mode is on.
+	 */
+	public boolean isRelativeMouseMode() {
+		return (robot != null);
+	}
+
+
+	private synchronized void recenterMouse() {
+		//Window window = screen.getFullScreenWindow();
+		if (robot != null && this.isShowing()) {
+			centerLocation.x = BOARD_WIDTH / 2 ;
+			centerLocation.y = BOARD_HEIGHT / 2;
+			SwingUtilities.convertPointToScreen(centerLocation,
+					this);
+			isRecentering = true;
+			robot.mouseMove(centerLocation.x, centerLocation.y);
+		}
+	}
+
+
+
+	private class MouseListeners extends MouseAdapter{
+		@Override
 		public void mouseClicked(MouseEvent m){
 			int x = player.getX();
 			int y = player.getY();
@@ -718,5 +792,104 @@ public class Board extends JPanel implements Runnable, Commons {
 				}
 			}
 		}
+
+
+		// from the MouseListener interface
+		public void mouseEntered(MouseEvent m) {
+
+		}
+
+
+		// from the MouseListener interface
+		public void mouseExited(MouseEvent m) {
+			//player.mouseM(0,0);
+			mouseMoved(m);
+		}
+
+
+		// from the MouseMotionListener interface
+		public void mouseDragged(MouseEvent m) {
+			mouseMoved(m);
+		}
+
+
+		@Override
+		public synchronized void mouseMoved(MouseEvent m) {
+			if (isRecentering &&
+					centerLocation.x == m.getX() &&
+					centerLocation.y == m.getY())
+			{
+				isRecentering = false;
+			}
+			else {
+				int dx = m.getX() - mouseLocation.x;
+				int dy = m.getY() - mouseLocation.y;
+				if(ingame) {
+					if (m.getX() <= 2) {
+						player.setX(2);
+					} else if (m.getX() >= BOARD_WIDTH - 2 * PLAYER_WIDTH) {
+						player.setX(BOARD_WIDTH - 2 * PLAYER_WIDTH);
+					} else {
+						player.setX(m.getX());
+					}
+
+					if (m.getY() >= 340) {
+						player.setY(340);
+					} else if (m.getY() <= 275) {
+						player.setY(275);
+					} else {
+						player.setY(m.getY());
+					}
+				}
+
+				if (isRelativeMouseMode()) {
+					recenterMouse();
+				}
+
+			}
+			mouseLocation.x = m.getX();
+			mouseLocation.y = m.getY();
+		}
+
 	}
+
+
+//
+//	private class MAdapter extends MouseAdapter{
+//
+//
+//		public void mouseClicked(MouseEvent m){
+//			int x = player.getX();
+//			int y = player.getY();
+//			if (ingame) {
+//				if (m.getButton() == MouseEvent.BUTTON1) {
+//					//create iterator
+//					Shot sh = new Shot(x,y);
+//					shots.add(sh);
+//				}
+//			}
+//		}
+//
+//		@Override
+//		public void mouseMoved(MouseEvent m){
+//			//do nothing
+//		}
+//
+//		@Override
+//		public void mouseDragged(MouseEvent m){
+//			Point point = m.getSource().getLocationOnScreen();
+//			point.x += (m.getSource().getWidth() / 2);
+//			point.y += (m.getSource().getHeight() / 2);
+//			r.mouseMove(point.x, point.y);
+//
+//			Point movedPoint = m.getLocationOnScreen();
+//
+//			int diffX = point.x - movedPoint.x;
+//			int diffY = point.y - movedPoint.y;
+//			System.out.println("Dragged: " + diffX + ", " + diffY);
+//		}
+//
+//
+//	}
+
 }

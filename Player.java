@@ -62,6 +62,28 @@ public class Player extends Sprite implements Commons {
 
 	}
 
+	public void mouseM(int dx,int dy){
+		if(dx>0){
+			mDx+=2;
+		}else if(dx < 0){
+			mDx-=2;
+		}
+		else{
+			mDx = 0;
+		}
+		if(dy>0){
+			mDy+=2;
+		}else if (dy<0){
+			mDy-=2;
+		}
+		else{
+			mDy = 0;
+		}
+//		mDx = dx;
+//		mDy = dy;
+	}
+
+
 	public void keyReleased(KeyEvent e) {
 		int key = e.getKeyCode();
 		if ((key == KeyEvent.VK_LEFT) || (key == KeyEvent.VK_RIGHT)) {
