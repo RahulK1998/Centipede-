@@ -5,6 +5,7 @@ public class Shot extends Sprite {
 	private final int H_SPACE = 6;
 	private final int V_SPACE = 1;
 
+	//empty constructor
 	public Shot() {
 	}
 

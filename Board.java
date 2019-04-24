@@ -21,7 +21,9 @@ public class Board extends JPanel implements Runnable, Commons {
 	private ArrayList<Alien> aliens;
 	private ArrayList<Player> lives;
 	private ArrayList<Centipede> segments;
+	private ArrayList<Shot> shots;
 	private Player player;
+	private Spider spider;
 
 	private Shot shot;
 
@@ -35,6 +37,7 @@ public class Board extends JPanel implements Runnable, Commons {
 	private int centNew = 0;
 	private int currentLife = 3; //Current limit for life
 	private int score = 0;
+	private int noAliens = 0;
 
 	private boolean ingame = true;
 	private final String explImg = "./img/explosion.png";
@@ -44,6 +47,7 @@ public class Board extends JPanel implements Runnable, Commons {
 	private final String m1 = "./img/mushroom4.png";
 	private final String centImg = "./img/centipede2.png";
 	private final String cent2Img = "./img/centipede3.png";
+	private final String sp2 = "./img/spider2.png";
 
 	private String message = "Game Over";
 
@@ -61,9 +65,10 @@ public class Board extends JPanel implements Runnable, Commons {
 		setDoubleBuffered(true);
 	}
 
+	//don't know if this is needed ??
 	public void addNotify() {
 		super.addNotify();
-		gameInit();
+		//gameInit();
 	}
 
 	public void centInit() {
@@ -76,6 +81,17 @@ public class Board extends JPanel implements Runnable, Commons {
 			segments.add(centipede);
 		}
 	}
+
+	public void spiderInit(){
+		spider = new Spider(BORDER_LEFT,BOARD_WIDTH-BORDER_RIGHT-5*SPRITE_HEIGHT);
+		Random generator1 = new Random();
+		int xNext = generator1.nextInt(BOARD_WIDTH - 2* BORDER_RIGHT) + 2* BORDER_LEFT;
+		int yNext = generator1.nextInt(BOARD_HEIGHT - 2* BORDER_RIGHT) + 2* BORDER_LEFT;
+		spider.setXDirection(xNext);
+		spider.setYDirection(yNext);
+
+	}
+
 
 	public void lifeInit(){
 		lives = new ArrayList<Player>();
@@ -103,6 +119,8 @@ public class Board extends JPanel implements Runnable, Commons {
 	public void gameInit() {
 
 		centInit();
+
+		spiderInit();
 
 
 		aliens = new ArrayList<Alien>();
@@ -135,6 +153,7 @@ public class Board extends JPanel implements Runnable, Commons {
 				list.add(indx);
 				Alien a = (Alien) aliens.get(indx+i*18);
 				a.setVisible(true);
+				noAliens++;
 			}
 		}
 
@@ -152,7 +171,11 @@ public class Board extends JPanel implements Runnable, Commons {
 					rowIndx++;
 				}
 				else if (aliens.get(colIndx + 18*rowIndx ).isVisible() ){
+					if(aliens.get((colIndx-(direction)) + 18*(rowIndx+1)).isVisible()){
+						noAliens--;
+					}
 					aliens.get((colIndx-(direction)) + 18*(rowIndx+1)).setVisible(false);
+
 					rowIndx++;
 				}
 				else{
@@ -174,7 +197,14 @@ public class Board extends JPanel implements Runnable, Commons {
 
 		lifeInit();
 
-		shot = new Shot();
+
+		shots = new ArrayList<Shot>(); //empties old list in new game
+//		shot = new Shot();
+//		shots.add(shot);
+//		Creating shots
+//		ImageIcon iii = new ImageIcon(alienImg);
+
+
 		if ((animator == null) || (!ingame)) {
 			animator = new Thread(this);
 			animator.start();
@@ -215,6 +245,18 @@ public class Board extends JPanel implements Runnable, Commons {
 		}
 	}
 
+
+	public void drawSpider(Graphics g) {
+		if (spider.isVisible()) {
+			g.drawImage(spider.getImage(), spider.getX(), spider.getY(), this);
+		}
+
+		if (spider.isDying()) {
+			spider.die();
+		}
+	}
+
+
 	public void drawScore(Graphics g) {
 		Font small = new Font("Helvetica", Font.BOLD, 14);
 		FontMetrics metr = this.getFontMetrics(small);
@@ -242,8 +284,13 @@ public class Board extends JPanel implements Runnable, Commons {
 	}
 
 	public void drawShot(Graphics g) {
-		if (shot.isVisible()) {
-			g.drawImage(shot.getImage(), shot.getX(), shot.getY(), this);
+		// create an iterator
+		Iterator its = shots.iterator();
+		while (its.hasNext()) {
+			Shot shot = (Shot) its.next();
+			if (shot.isVisible()) {
+				g.drawImage(shot.getImage(), shot.getX(), shot.getY(), this);
+			}
 		}
 	}
 
@@ -270,6 +317,7 @@ public class Board extends JPanel implements Runnable, Commons {
 			drawPlayer(g);
 			drawShot(g);
 			drawCentipede(g);
+			drawSpider(g);
 			drawScore(g);
 		}
 
@@ -294,10 +342,11 @@ public class Board extends JPanel implements Runnable, Commons {
 	}
 
 	public void animationCycle() {
-		if (deaths == NO_ALIENS) {
+		if (deaths == noAliens) {
 			ingame = false;
-			message = "You win!";
+			message = "You win! Your HighScore: " + score ;
 		}
+		//System.out.println(noAliens+" "+ deaths);
 
 		if (centNew == CENT_LENGTH) {
 			score+= 600;
@@ -305,11 +354,17 @@ public class Board extends JPanel implements Runnable, Commons {
 			drawCentipede(this.getGraphics());
 		}
 
+		//if spider dies -> make new spider
+		if(!spider.isVisible()){
+			spiderInit();
+		}
+
 		//Seing if the player lost a life
 		if(player.getLives() < currentLife){
 			currentLife = player.getLives();
 			player = new Player();
 			centInit();
+			spiderInit();
 			lifeInit();
 			mushroomRestore();
 			//gameInit(); - for new game
@@ -323,80 +378,114 @@ public class Board extends JPanel implements Runnable, Commons {
 
 		player.act();
 
-		if (shot.isVisible()) {
-			Iterator it = aliens.iterator();
-			Iterator it2 = segments.iterator();
-			int shotX = shot.getX();
-			int shotY = shot.getY();
+		//create an iterator
+		Iterator itShots = shots.iterator();
+		while (itShots.hasNext()) {
+			Shot shot = (Shot) itShots.next();
+			if (shot.isVisible()) {
+				Iterator it = aliens.iterator();
+				int shotX = shot.getX();
+				int shotY = shot.getY();
 
-			while (it.hasNext()) {
-				Alien alien = (Alien)it.next();
-				int alienX = alien.getX();
-				int alienY = alien.getY();
-				ImageIcon ii;
-				if (alien.isVisible() && (shot.isVisible())) {
-					if ((shotX >= alienX) && (shotX <= alienX + ALIEN_WIDTH) && (shotY >= alienY) && (shotY <= alienY+ALIEN_HEIGHT)) {
-						switch(alien.getLives()){
-							case 3: alien.setLives(2);
+				while (it.hasNext()) {
+					Alien alien = (Alien) it.next();
+					int alienX = alien.getX();
+					int alienY = alien.getY();
+					ImageIcon ii;
+					if (alien.isVisible() && (shot.isVisible())) {
+						if ((shotX >= alienX) && (shotX <= alienX + ALIEN_WIDTH) && (shotY >= alienY) && (shotY <= alienY + ALIEN_HEIGHT)) {
+							switch (alien.getLives()) {
+								case 3:
+									alien.setLives(2);
 									ii = new ImageIcon(m2);
 									alien.setImage(ii.getImage());
 									shot.die();
 									score++;
 									break;
-							case 2: alien.setLives(1);
+								case 2:
+									alien.setLives(1);
 									ii = new ImageIcon(m1);
 									alien.setImage(ii.getImage());
 									shot.die();
 									score++;
 									break;
-							case 1: alien.setLives(0);
+								case 1:
+									alien.setLives(0);
 									ii = new ImageIcon(explImg);
 									alien.setImage(ii.getImage());
 									alien.setDying(true);
 									deaths++;
 									shot.die();
-									score+=5;
+									score += 5;
 									break;
-						}
-					}
-				}
-			}
-
-			while (it2.hasNext()) {
-				Centipede centipede = (Centipede) it2.next();
-				int centiX = centipede.getX();
-				int centiY = centipede.getY();
-				ImageIcon ii;
-				if (centipede.isVisible() && (shot.isVisible())) {
-					if ((shotX >= centiX) && (shotX <= centiX + ALIEN_WIDTH) && (shotY >= centiY) && (shotY <= centiY+ALIEN_HEIGHT)) {
-						switch(centipede.getLives()){
-							case 2: centipede.setLives(1);
-								ii = new ImageIcon(cent2Img);
-								centipede.setImage(ii.getImage());
-								score += 2;
-								shot.die();
-								break;
-							case 1: centipede.setLives(0);
-								ii = new ImageIcon(explImg);
-								centipede.setImage(ii.getImage());
-								centipede.setDying(true);
-								centNew++;
-								score+=5;
-								shot.die();
-								break;
+							}
 						}
 					}
 				}
 
-			}
+				Iterator it2 = segments.iterator();
+				while (it2.hasNext()) {
+					Centipede centipede = (Centipede) it2.next();
+					int centiX = centipede.getX();
+					int centiY = centipede.getY();
+					ImageIcon ii;
+					if (centipede.isVisible() && (shot.isVisible())) {
+						if ((shotX >= centiX) && (shotX <= centiX + ALIEN_WIDTH) && (shotY >= centiY) && (shotY <= centiY + ALIEN_HEIGHT)) {
+							switch (centipede.getLives()) {
+								case 2:
+									centipede.setLives(1);
+									ii = new ImageIcon(cent2Img);
+									centipede.setImage(ii.getImage());
+									score += 2;
+									shot.die();
+									break;
+								case 1:
+									centipede.setLives(0);
+									ii = new ImageIcon(explImg);
+									centipede.setImage(ii.getImage());
+									centipede.setDying(true);
+									centNew++;
+									score += 5;
+									shot.die();
+									break;
+							}
+						}
+					}
+				}
 
-			int y = shot.getY();
-			y -= 4;
-			if (y <= 0) {
-				shot.die();
-			}
-			else {
-				shot.setY(y);
+
+				int spX = spider.getX();
+				int spY = spider.getY();
+				ImageIcon im;
+				if (spider.isVisible() && (shot.isVisible())) {
+					if ((shotX >= spX) && (shotX <= spX + ALIEN_WIDTH) && (shotY >= spY) && (shotY <= spY + ALIEN_HEIGHT)) {
+						switch (spider.getLives()) {
+							case 2:
+								spider.setLives(1);
+								im = new ImageIcon(sp2);
+								spider.setImage(im.getImage());
+								score += 100;
+								shot.die();
+								break;
+							case 1:
+								spider.setLives(0);
+								im = new ImageIcon(explImg);
+								spider.setImage(im.getImage());
+								spider.setDying(true);
+								score += 600;
+								shot.die();
+								break;
+						}
+					}
+				}
+
+				int y = shot.getY();
+				y -= 4;
+				if (y <= 0) {
+					shot.die();
+				} else {
+					shot.setY(y);
+				}
 			}
 		}
 
@@ -406,28 +495,6 @@ public class Board extends JPanel implements Runnable, Commons {
 
 
 		//Combine iterators
-
-
-
-//		while(itm.hasNext()){
-//
-//			Alien shroom = (Alien) itm.next();
-//			//get rid of unnecessay ct
-//			if(!ct.isVisible()){
-//				break;
-//			}
-//			if(shroom.isVisible()){
-//				System.out.println("I'm in 1"+ (shroom.isVisible()));
-//				if((x  <= shroom.getX()+ ALIEN_WIDTH) && (x + ALIEN_WIDTH >= shroom.getX()) ){
-//					if((y + ALIEN_HEIGHT >= shroom.getY()) && (y <= shroom.getY()+ALIEN_HEIGHT)){
-//						System.out.println("I'm in 2");
-//						ct.setY(ct.getY() + GO_DOWN);
-//						//System.out.println("x -> "+x +" x + Alien ->" +(x+ ALIEN_WIDTH )+ " shroom->" + shroom.getX() );
-//						break;
-//					}
-//				}
-//			}
-//		}
 
 		Iterator itl = segments.iterator();
 		while (itl.hasNext()) {
@@ -449,18 +516,40 @@ public class Board extends JPanel implements Runnable, Commons {
 			}
 
 			if (ct.isVisible()) {
-				//not dropping beyond the top most line
-//				if (y > BOARD_HEIGHT - BORDER_RIGHT - (2* SPRITE_HEIGHT)) {
-////					ingame = false;
-////					message = "Invasion!";
-//					System.out.println("Invasion has occeured, starting new game ");
-//					player.setLives(player.getLives()-1);
-//					break;
-//				}
-
 				ct.act();
 			}
 		}
+
+		//spider.act -> movement
+		Random generator2 = new Random();
+		//Random coord
+		int xNext = generator2.nextInt(BOARD_WIDTH - 2* BORDER_RIGHT) + 2* BORDER_LEFT;
+		int yNext = generator2.nextInt(BOARD_HEIGHT - 2* BORDER_RIGHT) + 2* BORDER_LEFT;
+
+		if (spider.isVisible()) {
+			if (spider.reached()){
+				spider.setXDirection(generator2.nextInt(BOARD_WIDTH - 2* BORDER_RIGHT) + 2* BORDER_LEFT);
+				spider.setYDirection(generator2.nextInt(BOARD_HEIGHT - 2* BORDER_RIGHT) + 2* BORDER_LEFT);
+			}
+			spider.act();
+		}
+
+
+//		if ((x >= BOARD_WIDTH - BORDER_RIGHT) && (ct.getDirection() != -1)) {
+//			ct.setDirection(-1);
+//			if(!(y > BOARD_HEIGHT - BORDER_RIGHT - (3* SPRITE_HEIGHT))){
+//				ct.setY(ct.getY() + GO_DOWN);
+//			}
+//
+//		}
+//		else if ((x <= BORDER_LEFT) && (ct.getDirection() != 1)) {
+//			ct.setDirection(1);
+//			if(!(y > BOARD_HEIGHT - BORDER_RIGHT - (3* SPRITE_HEIGHT))){
+//				ct.setY(ct.getY() + GO_DOWN);
+//			}
+//		}
+
+
 
 
 		//Mushroom Collision Avoidance
@@ -486,7 +575,7 @@ public class Board extends JPanel implements Runnable, Commons {
 			}
 		}
 
-		//Player collison
+		//Player collison with centipede
 		Iterator segit2 = segments.iterator();
 		while(segit2.hasNext()){
 			Centipede segTwo = (Centipede) segit2.next();
@@ -508,42 +597,23 @@ public class Board extends JPanel implements Runnable, Commons {
 			}
 		}
 
+		//Player collision with Spider;
+		if(spider.isVisible()) {
+			if(spider.getY() + SPRITE_HEIGHT >=275){
+				if(spider.getX() <= (player.getX()+PLAYER_WIDTH)
+						&& spider.getX()+ALIEN_WIDTH >= (player.getX())
+						&& spider.getY() + ALIEN_HEIGHT >= (player.getY())
+						&& spider.getY() <= (player.getY() + PLAYER_HEIGHT)){
+					ImageIcon iv = new ImageIcon(explImg);
+					player.setImage(iv.getImage());
+					player.die();
+					//player.setDying(true); //will not matter
+					System.out.println("Head-on Collision with Spider");
+					player.setLives(player.getLives()-1);
+				}
+			}
+		}
 
-
-//		Iterator i3 = aliens.iterator();
-//		Random generator = new Random();
-
-//		while (i3.hasNext()) {
-//			int shot = generator.nextInt(25);
-//			Alien a = (Alien)i3.next();
-//			Alien.Bomb b = a.getBomb();
-//			if ((shot == CHANCE) && (a.isVisible()) && (b.isDestroyed())) {
-//				b.setDestroyed(false);
-//				b.setX(a.getX());
-//				b.setY(a.getY());
-//			}
-//
-//			int bombX = b.getX();
-//			int bombY = b.getY();
-//			int playerX = player.getX();
-//			int playerY = player.getY();
-//
-//			if ((player.isVisible()) && (!b.isDestroyed())) {
-//				if ((bombX >= playerX) && (bombX <= playerX+PLAYER_WIDTH) && (bombY >= playerY) && (bombY <= playerY+PLAYER_HEIGHT)) {
-//					ImageIcon ii = new ImageIcon(explImg);
-//					player.setImage(ii.getImage());
-//					player.setDying(true);
-//					b.setDestroyed(true);
-//				}
-//			}
-//
-//			if (!b.isDestroyed()) {
-//				b.setY(b.getY() + 1);
-//				if (b.getY() >= 325 - BOMB_HEIGHT) {
-//					b.setDestroyed(true);
-//				}
-//			}
-//		}
 	}
 
 	public void run() {
@@ -579,12 +649,31 @@ public class Board extends JPanel implements Runnable, Commons {
 	private class TAdapter extends KeyAdapter {
 		public void keyReleased(KeyEvent e) {
 			player.keyReleased(e);
+
 		}
 
 		public void keyPressed(KeyEvent e) {
 			player.keyPressed(e);
-			int x = player.getX();
-			int y = player.getY();
+//			int x = player.getX();
+//			int y = player.getY();
+			int key = e.getKeyCode();
+			if (key == KeyEvent.VK_Q) {
+				ingame = false;
+				message = "Thank You for Playing! Your Score: "+ score;
+			}
+			if (key == KeyEvent.VK_N) {
+				deaths = 0;
+				centNew = 0;
+				currentLife = 3; //Current limit for life
+				score = 0;
+				gameInit();
+				if(ingame == false){
+					ingame = true;
+				}
+			}
+
+
+
 //			if (ingame) {
 //				if (e.isAltDown()) {
 //					if (!shot.isVisible()) {
@@ -602,9 +691,9 @@ public class Board extends JPanel implements Runnable, Commons {
 			int y = player.getY();
 			if (ingame) {
 				if (m.getButton() == MouseEvent.BUTTON1) {
-					if (!shot.isVisible()) {
-						shot = new Shot(x,y);
-					}
+					//create iterator
+					Shot sh = new Shot(x,y);
+					shots.add(sh);
 				}
 			}
 		}
