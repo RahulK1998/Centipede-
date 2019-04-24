@@ -22,9 +22,6 @@ public class Board extends JPanel implements Runnable, Commons {
 	private ArrayList<Player> lives;
 	private ArrayList<Centipede> segments;
 	private Player player;
-	private Player life1;
-	private Player life2;
-	private Player life3;
 
 	private Shot shot;
 
@@ -77,6 +74,29 @@ public class Board extends JPanel implements Runnable, Commons {
 			Centipede centipede = new Centipede(centiX - SPRITE_WIDTH*j, centiY );
 			centipede.setImage(ii.getImage());
 			segments.add(centipede);
+		}
+	}
+
+	public void lifeInit(){
+		lives = new ArrayList<Player>();
+		for (int k = 0; k < currentLife; k++){
+			Player life = new Player();
+			life.setX(BORDER_LEFT+ k*SPRITE_WIDTH);
+			life.setY(0);
+			lives.add(life);
+		}
+	}
+
+	public void mushroomRestore(){
+		Iterator it = aliens.iterator();
+		ImageIcon ii = new ImageIcon(alienImg);
+		while(it.hasNext()){
+			Alien alien = (Alien) it.next();
+			if(alien.isVisible() && alien.getLives() < 3 ){
+				alien.setLives(3);
+				alien.setImage(ii.getImage());
+				score+=10;
+			}
 		}
 	}
 
@@ -151,13 +171,8 @@ public class Board extends JPanel implements Runnable, Commons {
 
 
 		player = new Player();
-		lives = new ArrayList<Player>();
-		for (int k = 0; k < currentLife; k++){
-			Player life = new Player();
-			life.setX(BORDER_LEFT+ k*SPRITE_WIDTH);
-			life.setY(0);
-			lives.add(life);
-		}
+
+		lifeInit();
 
 		shot = new Shot();
 		if ((animator == null) || (!ingame)) {
@@ -204,7 +219,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		Font small = new Font("Helvetica", Font.BOLD, 14);
 		FontMetrics metr = this.getFontMetrics(small);
 
-		g.setColor(Color.WHITE);
+		g.setColor(Color.GREEN);
 		g.setFont(small);
 		g.drawString(score + "", SPRITE_WIDTH*4, 12);
 	}
@@ -290,14 +305,19 @@ public class Board extends JPanel implements Runnable, Commons {
 			drawCentipede(this.getGraphics());
 		}
 
-		//Seing if the player losr a life
+		//Seing if the player lost a life
 		if(player.getLives() < currentLife){
 			currentLife = player.getLives();
-			gameInit();
+			player = new Player();
+			centInit();
+			lifeInit();
+			mushroomRestore();
+			//gameInit(); - for new game 
+
 			player.setLives(currentLife);
 			if(currentLife == 0){
 				ingame = false;
-				message = "Game Over! You lose!";
+				message = "Game Over! Your HighScore: " + score;
 			}
 		}
 
