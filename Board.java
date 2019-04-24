@@ -11,7 +11,7 @@ import java.awt.event.MouseEvent;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import javax.sound.sampled.*;
+import javax.sound.sampled.*; //Audio file stuff
 import java.io.File;
 import java.io.IOException;
 import java.awt.image.BufferedImage;
@@ -58,6 +58,8 @@ public class Board extends JPanel implements Runnable, Commons {
 	private final String m3 = "./img/mushroom2.png";
 	private final String m2 = "./img/mushroom3.png";
 	private final String m1 = "./img/mushroom4.png";
+	private final String centR = "./img/centipede1rev.png";
+	private final String centL = "./img/centipede1.png";
 	private final String centImg = "./img/centipede2.png";
 	private final String cent2Img = "./img/centipede3.png";
 	private final String sp2 = "./img/spider2.png";
@@ -67,6 +69,7 @@ public class Board extends JPanel implements Runnable, Commons {
 	private Thread animator;
 
 	public Board() {
+
 
 		//invisible cursor
 		// Transparent 16 x 16 pixel cursor image.
@@ -87,12 +90,6 @@ public class Board extends JPanel implements Runnable, Commons {
 		MouseListeners listeners = new MouseListeners();
 		addMouseListener(listeners);
 		addMouseMotionListener(listeners);
-
-//		final Robot r = new Robot();
-//		MAdapter ma = new MAdapter();
-//		this.addKeyListener(new TAdapter());
-//		this.addMouseListener(ma);
-//		this.addMouseMoionListener(ma);
 
 
 		setFocusable(true);
@@ -239,11 +236,6 @@ public class Board extends JPanel implements Runnable, Commons {
 
 
 		shots = new ArrayList<Shot>(); //empties old list in new game
-//		shot = new Shot();
-//		shots.add(shot);
-//		Creating shots
-//		ImageIcon iii = new ImageIcon(alienImg);
-
 
 		if ((animator == null) || (!ingame)) {
 			animator = new Thread(this);
@@ -263,8 +255,6 @@ public class Board extends JPanel implements Runnable, Commons {
 					alien.setVisible(false);
 				}
 			}
-			//wrong random number, mushroom out of bound handling
-
 			if (alien.isDying()) {
 				alien.die();
 			}
@@ -272,17 +262,38 @@ public class Board extends JPanel implements Runnable, Commons {
 	}
 
 	public void drawCentipede(Graphics g) {
-		Iterator it = segments.iterator();
-		while (it.hasNext()) {
-			Centipede centipede = (Centipede) it.next();
+//		Iterator it = segments.iterator();
+		ImageIcon ir = new ImageIcon(centR);
+		ImageIcon il = new ImageIcon(centL);
+		for(int i = 0; i < CENT_LENGTH; i ++)
+		{
+			Centipede centipede = (Centipede) segments.get(i);
 			if (centipede.isVisible()) {
+				if((i == (CENT_LENGTH-1)) || !(segments.get(i+1).isVisible())){
+					if(centipede.getDirection() == 1){
+						centipede.setImage(ir.getImage());
+					}else if(centipede.getDirection() == -1){
+						centipede.setImage(il.getImage());
+					}
+				}
 				g.drawImage(centipede.getImage(), centipede.getX(), centipede.getY(), this);
 			}
 
 			if (centipede.isDying()) {
-				 centipede.die();
+				centipede.die();
 			}
 		}
+//		while (it.hasNext()) {
+//			Centipede centipede = (Centipede) it.next();
+//			if (centipede.isVisible()) {
+//
+//				g.drawImage(centipede.getImage(), centipede.getX(), centipede.getY(), this);
+//			}
+//
+//			if (centipede.isDying()) {
+//				 centipede.die();
+//			}
+//		}
 	}
 
 
@@ -307,9 +318,27 @@ public class Board extends JPanel implements Runnable, Commons {
 	}
 
 	public void drawPlayer(Graphics g) {
+
 		if (player.isVisible()) {
 			g.drawImage(player.getImage(), player.getX(), player.getY(), this);
 		}
+
+		if(player.getLives() < currentLife){
+			try {
+				String soundName = "./sounds/Collision.wav";
+				AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(soundName));
+				Clip clip = AudioSystem.getClip();
+				clip.open(audioInputStream);
+				clip.start();
+			} catch (UnsupportedAudioFileException ex1) {
+//				ex1.printStackTrace();
+			} catch (IOException ex2) {
+//				ex2.printStackTrace();
+			} catch (LineUnavailableException ex3) {
+//				ex3.printStackTrace();
+			}
+		}
+
 
 		Iterator itLife = lives.iterator();
 		while(itLife.hasNext()){
@@ -340,11 +369,11 @@ public class Board extends JPanel implements Runnable, Commons {
 						clip.open(audioInputStream);
 						clip.start();
 					} catch (UnsupportedAudioFileException ex1) {
-						ex1.printStackTrace();
+//						ex1.printStackTrace();
 					} catch (IOException ex2) {
-						ex2.printStackTrace();
+//						ex2.printStackTrace();
 					} catch (LineUnavailableException ex3) {
-						ex3.printStackTrace();
+//						ex3.printStackTrace();
 					}
 				}
 			}
@@ -352,16 +381,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		}
 	}
 
-//	public void drawBombing(Graphics g) {
-//		Iterator i3 = aliens.iterator();
-//		while (i3.hasNext()) {
-//			Alien a = (Alien)i3.next();
-//			Alien.Bomb b = a.getBomb();
-//			if (!b.isDestroyed()) {
-//				g.drawImage(b.getImage(), b.getX(), b.getY(), this);
-//			}
-//		}
-//	}
+
 
 	public void paint(Graphics g) {
 		super.paint(g);
@@ -400,11 +420,11 @@ public class Board extends JPanel implements Runnable, Commons {
 	}
 
 	public void animationCycle() {
-		if (deaths == noAliens) {
-			ingame = false;
-			message = "You win! Your HighScore: " + score ;
-		}
-		//System.out.println(noAliens+" "+ deaths);
+		//does not matter even if all mushrooms are gone
+//		if (deaths == noAliens) {
+//			ingame = false;
+//			message = "You win! Your HighScore: " + score ;
+//		}
 
 		if (centNew == CENT_LENGTH) {
 			score+= 600;
@@ -421,6 +441,24 @@ public class Board extends JPanel implements Runnable, Commons {
 		if(player.getLives() < currentLife){
 			currentLife = player.getLives();
 			player = new Player();
+
+			//Player starts where they left off
+			if (mouseLocation.x <= 2) {
+				player.setX(2);
+			} else if (mouseLocation.x >= BOARD_WIDTH - 2 * PLAYER_WIDTH) {
+				player.setX(BOARD_WIDTH - 2 * PLAYER_WIDTH);
+			} else {
+				player.setX(mouseLocation.x);
+			}
+
+			if (mouseLocation.y >= 340) {
+				player.setY(340);
+			} else if (mouseLocation.y <= 275) {
+				player.setY(275);
+			} else {
+				player.setY(mouseLocation.y);
+			}
+
 			centInit();
 			spiderInit();
 			lifeInit();
@@ -593,19 +631,6 @@ public class Board extends JPanel implements Runnable, Commons {
 		}
 
 
-//		if ((x >= BOARD_WIDTH - BORDER_RIGHT) && (ct.getDirection() != -1)) {
-//			ct.setDirection(-1);
-//			if(!(y > BOARD_HEIGHT - BORDER_RIGHT - (3* SPRITE_HEIGHT))){
-//				ct.setY(ct.getY() + GO_DOWN);
-//			}
-//
-//		}
-//		else if ((x <= BORDER_LEFT) && (ct.getDirection() != 1)) {
-//			ct.setDirection(1);
-//			if(!(y > BOARD_HEIGHT - BORDER_RIGHT - (3* SPRITE_HEIGHT))){
-//				ct.setY(ct.getY() + GO_DOWN);
-//			}
-//		}
 
 
 
@@ -619,12 +644,9 @@ public class Board extends JPanel implements Runnable, Commons {
 				while (alit.hasNext()){
 					Alien shroom = (Alien) alit.next();
 					if (shroom.isVisible()) {
-						//System.out.println("I'm in 1" + (shroom.isVisible()));
 						if ((segOne.getX() <= shroom.getX() + ALIEN_WIDTH) && (segOne.getX() + ALIEN_WIDTH >= shroom.getX())) {
 							if ((segOne.getY() + ALIEN_HEIGHT >= shroom.getY()) && (segOne.getY() <= shroom.getY() + ALIEN_HEIGHT)) {
-								//System.out.println("I'm in 2");
 								segOne.setY(segOne.getY() + GO_DOWN);
-								//System.out.println("x -> "+x +" x + Alien ->" +(x+ ALIEN_WIDTH )+ " shroom->" + shroom.getX() );
 								break;
 							}
 						}
@@ -646,8 +668,6 @@ public class Board extends JPanel implements Runnable, Commons {
 						ImageIcon iv = new ImageIcon(explImg);
 						player.setImage(iv.getImage());
 						player.die();
-						//player.setDying(true); //will not matter
-						System.out.println("Head-on Collision with Centipede ");
 						player.setLives(player.getLives()-1);
 						break;
 					}
@@ -665,8 +685,6 @@ public class Board extends JPanel implements Runnable, Commons {
 					ImageIcon iv = new ImageIcon(explImg);
 					player.setImage(iv.getImage());
 					player.die();
-					//player.setDying(true); //will not matter
-					System.out.println("Head-on Collision with Spider");
 					player.setLives(player.getLives()-1);
 				}
 			}
@@ -781,12 +799,11 @@ public class Board extends JPanel implements Runnable, Commons {
 
 	private class MouseListeners extends MouseAdapter{
 		@Override
-		public void mouseClicked(MouseEvent m){
+		public void mousePressed(MouseEvent m){
 			int x = player.getX();
 			int y = player.getY();
 			if (ingame) {
 				if (m.getButton() == MouseEvent.BUTTON1) {
-					//create iterator
 					Shot sh = new Shot(x,y);
 					shots.add(sh);
 				}
@@ -796,7 +813,7 @@ public class Board extends JPanel implements Runnable, Commons {
 
 		// from the MouseListener interface
 		public void mouseEntered(MouseEvent m) {
-
+			mouseMoved(m);
 		}
 
 
@@ -841,55 +858,12 @@ public class Board extends JPanel implements Runnable, Commons {
 						player.setY(m.getY());
 					}
 				}
-
 				if (isRelativeMouseMode()) {
 					recenterMouse();
 				}
-
 			}
 			mouseLocation.x = m.getX();
 			mouseLocation.y = m.getY();
 		}
-
 	}
-
-
-//
-//	private class MAdapter extends MouseAdapter{
-//
-//
-//		public void mouseClicked(MouseEvent m){
-//			int x = player.getX();
-//			int y = player.getY();
-//			if (ingame) {
-//				if (m.getButton() == MouseEvent.BUTTON1) {
-//					//create iterator
-//					Shot sh = new Shot(x,y);
-//					shots.add(sh);
-//				}
-//			}
-//		}
-//
-//		@Override
-//		public void mouseMoved(MouseEvent m){
-//			//do nothing
-//		}
-//
-//		@Override
-//		public void mouseDragged(MouseEvent m){
-//			Point point = m.getSource().getLocationOnScreen();
-//			point.x += (m.getSource().getWidth() / 2);
-//			point.y += (m.getSource().getHeight() / 2);
-//			r.mouseMove(point.x, point.y);
-//
-//			Point movedPoint = m.getLocationOnScreen();
-//
-//			int diffX = point.x - movedPoint.x;
-//			int diffY = point.y - movedPoint.y;
-//			System.out.println("Dragged: " + diffX + ", " + diffY);
-//		}
-//
-//
-//	}
-
 }

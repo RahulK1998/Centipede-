@@ -22,7 +22,7 @@ public class Centipede extends Sprite {
 
     public void act() {
         //times 2 in a more elaborate map -- way too fast
-        mX += mDirection;
+        mX += mDirection * 2;
     }
 
     public int getLives(){
