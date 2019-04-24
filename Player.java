@@ -2,12 +2,13 @@ import java.awt.event.KeyEvent;
 import javax.swing.ImageIcon;
 
 public class Player extends Sprite implements Commons {
-	private final int START_X = 270;//270
-	private final int START_Y = 315;//280
+	private int START_X = 270;//270
+	private int START_Y = 315;//280
 
 	private final String path = "./img/ship.png";
 	private int mWidth;
 	private int mHeight;
+	private int lives = 3;
 
 	public Player() {
 		ImageIcon ii = new ImageIcon(path);
@@ -31,9 +32,17 @@ public class Player extends Sprite implements Commons {
 		if (mY >= 346) {
 			mY = 346;
 		}
+		//initially 275
 		if (mY <= 275) {
 			mY = 275;
 		}
+	}
+
+	public int getLives(){
+		return lives;
+	}
+	public void setLives(int remaining){
+		lives = remaining;
 	}
 
 	public void keyPressed(KeyEvent e) {

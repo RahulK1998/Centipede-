@@ -19,8 +19,13 @@ import javax.swing.JPanel;
 public class Board extends JPanel implements Runnable, Commons {
 	private Dimension d;
 	private ArrayList<Alien> aliens;
+	private ArrayList<Player> lives;
 	private ArrayList<Centipede> segments;
 	private Player player;
+	private Player life1;
+	private Player life2;
+	private Player life3;
+
 	private Shot shot;
 
 	private int alienX = BORDER_LEFT+SPRITE_WIDTH;
@@ -31,6 +36,7 @@ public class Board extends JPanel implements Runnable, Commons {
 	private int centiDirection = -1;
 	private int deaths = 0;
 	private int centNew = 0;
+	private int currentLife = 3; //Current limit for life
 
 	private boolean ingame = true;
 	private final String explImg = "./img/explosion.png";
@@ -144,6 +150,14 @@ public class Board extends JPanel implements Runnable, Commons {
 
 
 		player = new Player();
+		lives = new ArrayList<Player>();
+		for (int k = 0; k < currentLife; k++){
+			Player life = new Player();
+			life.setX(BORDER_LEFT+ k*SPRITE_WIDTH);
+			life.setY(0);
+			lives.add(life);
+		}
+
 		shot = new Shot();
 		if ((animator == null) || (!ingame)) {
 			animator = new Thread(this);
@@ -156,8 +170,14 @@ public class Board extends JPanel implements Runnable, Commons {
 		while (it.hasNext()) {
 			Alien alien = (Alien)it.next();
 			if (alien.isVisible()) {
-				g.drawImage(alien.getImage(), alien.getX(), alien.getY(), this);
+				if(( BORDER_LEFT <= alien.getX() )&&  (alien.getX()  <= (BOARD_WIDTH - BORDER_RIGHT - SPRITE_WIDTH ))) {
+					g.drawImage(alien.getImage(), alien.getX(), alien.getY(), this);
+				}
+				else{
+					alien.setVisible(false);
+				}
 			}
+			//wrong random number, mushroom out of bound handling 
 
 			if (alien.isDying()) {
 				alien.die();
@@ -182,6 +202,12 @@ public class Board extends JPanel implements Runnable, Commons {
 	public void drawPlayer(Graphics g) {
 		if (player.isVisible()) {
 			g.drawImage(player.getImage(), player.getX(), player.getY(), this);
+		}
+
+		Iterator itLife = lives.iterator();
+		while(itLife.hasNext()){
+			Player life = (Player) itLife.next();
+			g.drawImage(life.getImage(), life.getX(), life.getY(), this);
 		}
 
 		if (player.isDying()) {
@@ -250,6 +276,17 @@ public class Board extends JPanel implements Runnable, Commons {
 		if (centNew == CENT_LENGTH) {
 			centInit();
 			drawCentipede(this.getGraphics());
+		}
+
+		//Seing if the player losr a life
+		if(player.getLives() < currentLife){
+			currentLife = player.getLives();
+			gameInit();
+			player.setLives(currentLife);
+			if(currentLife == 0){
+				ingame = false;
+				message = "Game Over! You lose!";
+			}
 		}
 
 		player.act();
@@ -372,8 +409,11 @@ public class Board extends JPanel implements Runnable, Commons {
 			if (ct.isVisible()) {
 				//not dropping beyond the top most line
 				if (y > BOARD_HEIGHT - BORDER_RIGHT - (2* SPRITE_HEIGHT)) {
-					ingame = false;
-					message = "Invasion!";
+//					ingame = false;
+//					message = "Invasion!";
+					System.out.println("Invasion has occeured, starting new game ");
+					player.setLives(player.getLives()-1);
+					break;
 				}
 
 				ct.act();
@@ -381,7 +421,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		}
 
 
-
+		//Mushroom Collision Avoidance
 		Iterator segit = segments.iterator();
 		while(segit.hasNext()) {
 			Centipede segOne = (Centipede) segit.next();
@@ -404,6 +444,7 @@ public class Board extends JPanel implements Runnable, Commons {
 			}
 		}
 
+		//Player collison
 		Iterator segit2 = segments.iterator();
 		while(segit2.hasNext()){
 			Centipede segTwo = (Centipede) segit2.next();
@@ -415,7 +456,10 @@ public class Board extends JPanel implements Runnable, Commons {
 							&& segTwo.getY() <= (player.getY() + PLAYER_HEIGHT)){
 						ImageIcon iv = new ImageIcon(explImg);
 						player.setImage(iv.getImage());
-						player.setDying(true);
+						player.die();
+						//player.setDying(true); //will not matter
+						System.out.println("Head-on Collision with Centipede ");
+						player.setLives(player.getLives()-1);
 						break;
 					}
 				}
@@ -470,7 +514,7 @@ public class Board extends JPanel implements Runnable, Commons {
 				animationCycle();
 			}
 			catch(Exception e){
-				System.out.println("Error was caught "+ e);
+				//System.out.println("Error was caught "+ e);
 				continue;
 			}
 
