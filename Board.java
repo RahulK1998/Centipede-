@@ -312,7 +312,7 @@ public class Board extends JPanel implements Runnable, Commons {
 			centInit();
 			lifeInit();
 			mushroomRestore();
-			//gameInit(); - for new game 
+			//gameInit(); - for new game
 
 			player.setLives(currentLife);
 			if(currentLife == 0){
@@ -436,22 +436,27 @@ public class Board extends JPanel implements Runnable, Commons {
 			int y = ct.getY();
 			if ((x >= BOARD_WIDTH - BORDER_RIGHT) && (ct.getDirection() != -1)) {
 				ct.setDirection(-1);
-				ct.setY(ct.getY() + GO_DOWN);
+				if(!(y > BOARD_HEIGHT - BORDER_RIGHT - (3* SPRITE_HEIGHT))){
+					ct.setY(ct.getY() + GO_DOWN);
+				}
+
 			}
 			else if ((x <= BORDER_LEFT) && (ct.getDirection() != 1)) {
 				ct.setDirection(1);
-				ct.setY(ct.getY() + GO_DOWN);
+				if(!(y > BOARD_HEIGHT - BORDER_RIGHT - (3* SPRITE_HEIGHT))){
+					ct.setY(ct.getY() + GO_DOWN);
+				}
 			}
 
 			if (ct.isVisible()) {
 				//not dropping beyond the top most line
-				if (y > BOARD_HEIGHT - BORDER_RIGHT - (2* SPRITE_HEIGHT)) {
-//					ingame = false;
-//					message = "Invasion!";
-					System.out.println("Invasion has occeured, starting new game ");
-					player.setLives(player.getLives()-1);
-					break;
-				}
+//				if (y > BOARD_HEIGHT - BORDER_RIGHT - (2* SPRITE_HEIGHT)) {
+////					ingame = false;
+////					message = "Invasion!";
+//					System.out.println("Invasion has occeured, starting new game ");
+//					player.setLives(player.getLives()-1);
+//					break;
+//				}
 
 				ct.act();
 			}

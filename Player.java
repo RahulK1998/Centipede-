@@ -29,8 +29,8 @@ public class Player extends Sprite implements Commons {
 		}
 
 		mY += mDy;
-		if (mY >= 346) {
-			mY = 346;
+		if (mY >= 340) {
+			mY = 340;
 		}
 		//initially 275
 		if (mY <= 275) {
