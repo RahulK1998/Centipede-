@@ -37,6 +37,7 @@ public class Board extends JPanel implements Runnable, Commons {
 	private int deaths = 0;
 	private int centNew = 0;
 	private int currentLife = 3; //Current limit for life
+	private int score = 0;
 
 	private boolean ingame = true;
 	private final String explImg = "./img/explosion.png";
@@ -177,7 +178,7 @@ public class Board extends JPanel implements Runnable, Commons {
 					alien.setVisible(false);
 				}
 			}
-			//wrong random number, mushroom out of bound handling 
+			//wrong random number, mushroom out of bound handling
 
 			if (alien.isDying()) {
 				alien.die();
@@ -197,6 +198,15 @@ public class Board extends JPanel implements Runnable, Commons {
 				 centipede.die();
 			}
 		}
+	}
+
+	public void drawScore(Graphics g) {
+		Font small = new Font("Helvetica", Font.BOLD, 14);
+		FontMetrics metr = this.getFontMetrics(small);
+
+		g.setColor(Color.WHITE);
+		g.setFont(small);
+		g.drawString(score + "", SPRITE_WIDTH*4, 12);
 	}
 
 	public void drawPlayer(Graphics g) {
@@ -245,6 +255,7 @@ public class Board extends JPanel implements Runnable, Commons {
 			drawPlayer(g);
 			drawShot(g);
 			drawCentipede(g);
+			drawScore(g);
 		}
 
 		Toolkit.getDefaultToolkit().sync();
@@ -274,6 +285,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		}
 
 		if (centNew == CENT_LENGTH) {
+			score+= 600;
 			centInit();
 			drawCentipede(this.getGraphics());
 		}
@@ -309,11 +321,13 @@ public class Board extends JPanel implements Runnable, Commons {
 									ii = new ImageIcon(m2);
 									alien.setImage(ii.getImage());
 									shot.die();
+									score++;
 									break;
 							case 2: alien.setLives(1);
 									ii = new ImageIcon(m1);
 									alien.setImage(ii.getImage());
 									shot.die();
+									score++;
 									break;
 							case 1: alien.setLives(0);
 									ii = new ImageIcon(explImg);
@@ -321,6 +335,7 @@ public class Board extends JPanel implements Runnable, Commons {
 									alien.setDying(true);
 									deaths++;
 									shot.die();
+									score+=5;
 									break;
 						}
 					}
@@ -338,6 +353,7 @@ public class Board extends JPanel implements Runnable, Commons {
 							case 2: centipede.setLives(1);
 								ii = new ImageIcon(cent2Img);
 								centipede.setImage(ii.getImage());
+								score += 2;
 								shot.die();
 								break;
 							case 1: centipede.setLives(0);
@@ -345,6 +361,7 @@ public class Board extends JPanel implements Runnable, Commons {
 								centipede.setImage(ii.getImage());
 								centipede.setDying(true);
 								centNew++;
+								score+=5;
 								shot.die();
 								break;
 						}
