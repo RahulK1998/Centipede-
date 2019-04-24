@@ -8,6 +8,9 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import javax.sound.sampled.*;
+import java.io.File;
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -290,7 +293,25 @@ public class Board extends JPanel implements Runnable, Commons {
 			Shot shot = (Shot) its.next();
 			if (shot.isVisible()) {
 				g.drawImage(shot.getImage(), shot.getX(), shot.getY(), this);
+
+
+				if ((Math.abs(shot.getX() - player.getX()) <= 10) && (Math.abs(shot.getY() - player.getY()) <= 10)) {
+					try {
+						String soundName = "./sounds/playerShot.wav";
+						AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(soundName));
+						Clip clip = AudioSystem.getClip();
+						clip.open(audioInputStream);
+						clip.start();
+					} catch (UnsupportedAudioFileException ex1) {
+						ex1.printStackTrace();
+					} catch (IOException ex2) {
+						ex2.printStackTrace();
+					} catch (LineUnavailableException ex3) {
+						ex3.printStackTrace();
+					}
+				}
 			}
+
 		}
 	}
 
