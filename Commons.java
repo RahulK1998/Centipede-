@@ -13,5 +13,5 @@ public interface Commons {
 	public static final int DELAY = 17;
 	public static final int PLAYER_WIDTH = 15;
 	public static final int PLAYER_HEIGHT = 10;
-
+	public static final int CENT_LENGTH = 5;
 }

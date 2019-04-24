@@ -24,12 +24,13 @@ public class Board extends JPanel implements Runnable, Commons {
 	private Shot shot;
 
 	private int alienX = BORDER_LEFT+SPRITE_WIDTH;
-	private int alienY = SPRITE_HEIGHT; //1st row empty
+	private int alienY = 3*SPRITE_HEIGHT; //1st  2nd  and 3rd row empty
 	private int centiX = BOARD_WIDTH; //10 is segment length
-	private int centiY = 0;
+	private int centiY = 2*SPRITE_HEIGHT;
 	private int direction = 1;
 	private int centiDirection = -1;
 	private int deaths = 0;
+	private int centNew = 0;
 
 	private boolean ingame = true;
 	private final String explImg = "./img/explosion.png";
@@ -61,21 +62,25 @@ public class Board extends JPanel implements Runnable, Commons {
 		gameInit();
 	}
 
+	public void centInit() {
+		centNew = 0;
+		segments = new ArrayList<Centipede>(); //flushes all existing object
+		ImageIcon ii = new ImageIcon(centImg);
+		for (int j = 0; j < CENT_LENGTH; j++) {
+			Centipede centipede = new Centipede(centiX - SPRITE_WIDTH*j, centiY );
+			centipede.setImage(ii.getImage());
+			segments.add(centipede);
+		}
+	}
+
 	public void gameInit() {
 
-		segments = new ArrayList<Centipede>();
-		ImageIcon ii = new ImageIcon(centImg);
-			for (int j = 0; j < 7; j++) {
-				Centipede centipede = new Centipede(centiX - SPRITE_WIDTH*j, centiY );
-				centipede.setImage(ii.getImage());
-				segments.add(centipede);
-			}
-
+		centInit();
 
 
 		aliens = new ArrayList<Alien>();
 		ImageIcon iii = new ImageIcon(alienImg);
-		for (int i = 0; i < 15; i++) {
+		for (int i = 0; i < 13; i++) {
 			for (int j = 0; j < 18; j++) {
 				Alien alien = new Alien(alienX + 18*j, alienY + 18*i);
 				alien.setImage(iii.getImage());
@@ -91,7 +96,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		int indx = 0;
 		ArrayList<Integer> list;
 
-		for (int i = 0; i < 15; i++) {
+		for (int i = 0; i < 13; i++) {
 			list = new ArrayList<Integer>();
 			removeCount = generator.nextInt(9); //min value for random
 
@@ -111,9 +116,9 @@ public class Board extends JPanel implements Runnable, Commons {
 		int colIndx = 0;
 		//last row does'nt matter 14// inside col check
 		//TODO - some improvements in mushroom placement
-		while ( rowIndx < 14){
+		while ( rowIndx < 12){
 			while (colIndx < 18 && colIndx > -1){
-				if(rowIndx >= 14){
+				if(rowIndx >= 12){
 					break;
 				}
 				if (((colIndx == 0 && direction == 1)  || (colIndx == 17 && direction == -1)) && aliens.get(colIndx + 18*rowIndx ).isVisible() ){
@@ -242,6 +247,11 @@ public class Board extends JPanel implements Runnable, Commons {
 			message = "You win!";
 		}
 
+		if (centNew == CENT_LENGTH) {
+			centInit();
+			drawCentipede(this.getGraphics());
+		}
+
 		player.act();
 
 		if (shot.isVisible()) {
@@ -297,6 +307,7 @@ public class Board extends JPanel implements Runnable, Commons {
 								ii = new ImageIcon(explImg);
 								centipede.setImage(ii.getImage());
 								centipede.setDying(true);
+								centNew++;
 								shot.die();
 								break;
 						}
@@ -360,7 +371,7 @@ public class Board extends JPanel implements Runnable, Commons {
 
 			if (ct.isVisible()) {
 				//not dropping beyond the top most line
-				if (y > BOARD_HEIGHT - BORDER_RIGHT - (3* SPRITE_HEIGHT)) {
+				if (y > BOARD_HEIGHT - BORDER_RIGHT - (2* SPRITE_HEIGHT)) {
 					ingame = false;
 					message = "Invasion!";
 				}
