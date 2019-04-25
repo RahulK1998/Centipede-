@@ -162,8 +162,8 @@ public class Board extends JPanel implements Runnable, Commons {
 
 		aliens = new ArrayList<Alien>();
 		ImageIcon iii = new ImageIcon(alienImg);
-		for (int i = 0; i < 13; i++) {
-			for (int j = 0; j < 18; j++) {
+		for (int i = 0; i < ROWS; i++) {
+			for (int j = 0; j < COLS; j++) {
 				Alien alien = new Alien(alienX + 18*j, alienY + 18*i);
 				alien.setImage(iii.getImage());
 				alien.setVisible(false);
@@ -178,17 +178,17 @@ public class Board extends JPanel implements Runnable, Commons {
 		int indx = 0;
 		ArrayList<Integer> list;
 
-		for (int i = 0; i < 13; i++) {
+		for (int i = 0; i < ROWS; i++) {
 			list = new ArrayList<Integer>();
 			removeCount = generator.nextInt(9); //min value for random
 
 			for (int j = 0; j < removeCount; j++){
-				indx = generator.nextInt(18);
+				indx = generator.nextInt(COLS);
 				while(list.contains(indx)){
-					indx = generator.nextInt(18);
+					indx = generator.nextInt(COLS);
 				}
 				list.add(indx);
-				Alien a = (Alien) aliens.get(indx+i*18);
+				Alien a = (Alien) aliens.get(indx+i*COLS);
 				a.setVisible(true);
 				noAliens++;
 			}
@@ -199,19 +199,19 @@ public class Board extends JPanel implements Runnable, Commons {
 		int colIndx = 0;
 		//last row does'nt matter 14// inside col check
 		//TODO - some improvements in mushroom placement
-		while ( rowIndx < 12){
-			while (colIndx < 18 && colIndx > -1){
-				if(rowIndx >= 12){
+		while ( rowIndx < ROWS-1){
+			while (colIndx < COLS && colIndx > -1){
+				if(rowIndx >= ROWS-1){
 					break;
 				}
-				if (((colIndx == 0 && direction == 1)  || (colIndx == 17 && direction == -1)) && aliens.get(colIndx + 18*rowIndx ).isVisible() ){
+				if (((colIndx == 0 && direction == 1)  || (colIndx == COLS-1 && direction == -1)) && aliens.get(colIndx + COLS*rowIndx ).isVisible() ){
 					rowIndx++;
 				}
-				else if (aliens.get(colIndx + 18*rowIndx ).isVisible() ){
-					if(aliens.get((colIndx-(direction)) + 18*(rowIndx+1)).isVisible()){
+				else if (aliens.get(colIndx + COLS*rowIndx ).isVisible() ){
+					if(aliens.get((colIndx-(direction)) + COLS*(rowIndx+1)).isVisible()){
 						noAliens--;
 					}
-					aliens.get((colIndx-(direction)) + 18*(rowIndx+1)).setVisible(false);
+					aliens.get((colIndx-(direction)) + COLS*(rowIndx+1)).setVisible(false);
 
 					rowIndx++;
 				}
@@ -224,7 +224,7 @@ public class Board extends JPanel implements Runnable, Commons {
 				colIndx = 0;
 			}
 			else{
-				colIndx = 17;
+				colIndx = COLS-1;
 			}
 			rowIndx++;
 		}
@@ -265,16 +265,25 @@ public class Board extends JPanel implements Runnable, Commons {
 //		Iterator it = segments.iterator();
 		ImageIcon ir = new ImageIcon(centR);
 		ImageIcon il = new ImageIcon(centL);
-		for(int i = 0; i < CENT_LENGTH; i ++)
+		for(int i = 0; i < segments.size(); i ++)
 		{
 			Centipede centipede = (Centipede) segments.get(i);
 			if (centipede.isVisible()) {
-				if((i == (CENT_LENGTH-1)) || !(segments.get(i+1).isVisible())){
-					if(centipede.getDirection() == 1){
-						centipede.setImage(ir.getImage());
-					}else if(centipede.getDirection() == -1){
-						centipede.setImage(il.getImage());
+				try {
+					if (i == (CENT_LENGTH - 1)) {
+						if (centipede.getDirection() == 1) {
+							centipede.setImage(ir.getImage());
+						} else if (centipede.getDirection() == -1) {
+							centipede.setImage(il.getImage());
+						}
+					} else if (!(segments.get(i + 1).isVisible())) {
+						if (centipede.getDirection() == 1) {
+							centipede.setImage(ir.getImage());
+						} else if (centipede.getDirection() == -1) {
+							centipede.setImage(il.getImage());
+						}
 					}
+				}catch(Exception e){
 				}
 				g.drawImage(centipede.getImage(), centipede.getX(), centipede.getY(), this);
 			}
@@ -322,23 +331,6 @@ public class Board extends JPanel implements Runnable, Commons {
 		if (player.isVisible()) {
 			g.drawImage(player.getImage(), player.getX(), player.getY(), this);
 		}
-
-		if(player.getLives() < currentLife){
-			try {
-				String soundName = "./sounds/Collision.wav";
-				AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(soundName));
-				Clip clip = AudioSystem.getClip();
-				clip.open(audioInputStream);
-				clip.start();
-			} catch (UnsupportedAudioFileException ex1) {
-//				ex1.printStackTrace();
-			} catch (IOException ex2) {
-//				ex2.printStackTrace();
-			} catch (LineUnavailableException ex3) {
-//				ex3.printStackTrace();
-			}
-		}
-
 
 		Iterator itLife = lives.iterator();
 		while(itLife.hasNext()){
@@ -451,10 +443,10 @@ public class Board extends JPanel implements Runnable, Commons {
 				player.setX(mouseLocation.x);
 			}
 
-			if (mouseLocation.y >= 340) {
-				player.setY(340);
-			} else if (mouseLocation.y <= 275) {
-				player.setY(275);
+			if (mouseLocation.y >= BOARD_WIDTH-38) {
+				player.setY(BOARD_WIDTH-38);
+			} else if (mouseLocation.y <= BOARD_WIDTH-103) {
+				player.setY(BOARD_WIDTH-103);
 			} else {
 				player.setY(mouseLocation.y);
 			}
@@ -660,7 +652,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		while(segit2.hasNext()){
 			Centipede segTwo = (Centipede) segit2.next();
 			if(segTwo.isVisible()) {
-				if(segTwo.getY() + SPRITE_HEIGHT >=275){
+				if(segTwo.getY() + SPRITE_HEIGHT >=BOARD_WIDTH-103){
 					if(segTwo.getX() <= (player.getX()+PLAYER_WIDTH)
 							&& segTwo.getX()+ALIEN_WIDTH >= (player.getX())
 							&& segTwo.getY() + ALIEN_HEIGHT >= (player.getY())
@@ -677,7 +669,7 @@ public class Board extends JPanel implements Runnable, Commons {
 
 		//Player collision with Spider;
 		if(spider.isVisible()) {
-			if(spider.getY() + SPRITE_HEIGHT >=275){
+			if(spider.getY() + SPRITE_HEIGHT >=BOARD_WIDTH-103){
 				if(spider.getX() <= (player.getX()+PLAYER_WIDTH)
 						&& spider.getX()+ALIEN_WIDTH >= (player.getX())
 						&& spider.getY() + ALIEN_HEIGHT >= (player.getY())
@@ -850,10 +842,10 @@ public class Board extends JPanel implements Runnable, Commons {
 						player.setX(m.getX());
 					}
 
-					if (m.getY() >= 340) {
-						player.setY(340);
-					} else if (m.getY() <= 275) {
-						player.setY(275);
+					if (m.getY() >= BOARD_WIDTH-38) {
+						player.setY(BOARD_WIDTH-38);
+					} else if (m.getY() <= BOARD_WIDTH-103) {
+						player.setY(BOARD_WIDTH-103);
 					} else {
 						player.setY(m.getY());
 					}

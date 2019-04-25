@@ -2,8 +2,8 @@ import java.awt.event.KeyEvent;
 import javax.swing.ImageIcon;
 
 public class Player extends Sprite implements Commons {
-	private int START_X = 270;//270
-	private int START_Y = 315;//280
+	private int START_X = BOARD_WIDTH-105;//270
+	private int START_Y = BOARD_WIDTH-63;//280
 
 	private final String path = "./img/ship.png";
 	private int mWidth;
@@ -29,12 +29,12 @@ public class Player extends Sprite implements Commons {
 		}
 
 		mY += mDy;
-		if (mY >= 340) {
-			mY = 340;
+		if (mY >= BOARD_WIDTH-38) {
+			mY = BOARD_WIDTH-38;
 		}
 		//initially 275
-		if (mY <= 275) {
-			mY = 275;
+		if (mY <= BOARD_WIDTH-103) {
+			mY = BOARD_WIDTH-103;
 		}
 	}
 
